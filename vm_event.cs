@@ -9,7 +9,7 @@ namespace Rextester
         {
             View v = new View();
             v.Add("5");
-            v.Flash("5");
+            v.Search("5");
             v.Remove("5");
         }
     }
@@ -18,11 +18,10 @@ namespace Rextester
     public class ViewNode{
         private string str;
         
-        private event Action<ViewNode> Destroy;
+        public event Action<ViewNode> Destroy;
         
-        public ViewNode(string inStr, Action<ViewNode> destroy){
+        public ViewNode(string inStr){
             str = inStr;
-            Destroy += destroy;
         }
         
         public string GetValue(){
@@ -42,13 +41,11 @@ namespace Rextester
     public class ModelNode{
         private int num;
         
-        public event Action Flash;
+        public event Action Search;
         
         public event Action Destroy;
         
-        public ModelNode(int inNum, Action flash, Action destroy, int index){
-            Flash += flash;
-            Destroy += destroy;
+        public ModelNode(int inNum, int index){
             num = inNum;
         }
         
@@ -57,7 +54,7 @@ namespace Rextester
         }
         
         public void FlashObject(){
-            Flash.Invoke();
+            Search.Invoke();
         }
         
         public int GetValue(){
@@ -80,10 +77,13 @@ namespace Rextester
             
             if(!l) return;
             
-            ViewNode vn = new ViewNode(s,Destroy);
+            ViewNode vn = new ViewNode(s);
+            vn.Destroy += DestroyObject;
             list.Add(vn);
             
-            model.Add(n, vn.FlashObject, vn.DestroyObject, list.Count-1);
+            ModelNode mn = model.Add(n, list.Count-1);
+            mn.Destroy += vn.DestroyObject;
+            mn.Search += vn.FlashObject;
         }
         
         public void Remove(string s){
@@ -96,16 +96,16 @@ namespace Rextester
         
         }
         
-        public void Flash(string s){
+        public void Search(string s){
             
             int n;
             bool l = Int32.TryParse(s,out n);
             if(!l) return;
             
-            model.Flash(n);
+            model.Search(n);
         }
         
-        private void Destroy(object sender){
+        private void DestroyObject(object sender){
             ViewNode vn = sender as ViewNode;
             Console.WriteLine("destroy: {0}", vn.GetValue());
             list.Remove(vn);
@@ -119,9 +119,10 @@ namespace Rextester
             list = new List<ModelNode>();
         }
         
-        public void Add(int n, Action flash, Action destroy, int index){
-            ModelNode mn = new ModelNode(n, flash, destroy, index);
+        public ModelNode Add(int n, int index){
+            ModelNode mn = new ModelNode(n, index);
             list.Add(mn);
+            return mn;
         }
         
         public void Remove(int n){
@@ -141,7 +142,7 @@ namespace Rextester
             return -1;
         }
         
-        public void Flash(int n){
+        public void Search(int n){
         
             foreach(ModelNode mn in list){
                 if(mn.GetValue() == n){
