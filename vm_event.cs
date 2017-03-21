@@ -16,26 +16,26 @@ namespace Demo
     
     // ######################
     public class ViewNode{
-        private string str;
+        private string displayString;
         
-        public event Action<ViewNode> Destroy;
+        public event Action<ViewNode> Destroyed;
         
-        public ViewNode(string inStr, ModelNode mn){
-            str = inStr;
-            mn.Destroy += DestroyObject;
+        public ViewNode(ModelNode mn){
+            displayString = mn.GetValue().ToString();
+            mn.Destroyed += DestroyObject;
             mn.Found += FlashObject;
         }
         
         public string GetValue(){
-            return str;
+            return displayString;
         }
         
         public void FlashObject(){
-            Console.WriteLine("Node with value {0} is flashing!",str);
+            Console.WriteLine("Node with value {0} is flashing!",displayString);
         }
         
         public void DestroyObject(){
-            var d = Destroy;
+            var d = Destroyed;
             d(this);
         }
     } 
@@ -45,14 +45,14 @@ namespace Demo
         
         public event Action Found;
         
-        public event Action Destroy;
+        public event Action Destroyed;
         
         public ModelNode(int inNum){
             num = inNum;
         }
         
         public void DestroyObject(){
-            Destroy.Invoke();
+            Destroyed.Invoke();
         }
         
         public void FoundObject(){
@@ -81,8 +81,8 @@ namespace Demo
             
             ModelNode mn = model.Add(n);
             
-            ViewNode vn = new ViewNode(s, mn);
-            vn.Destroy += DestroyObject;
+            ViewNode vn = new ViewNode(mn);
+            vn.Destroyed += DestroyObject;
             list.Add(vn);
             
             return this;
