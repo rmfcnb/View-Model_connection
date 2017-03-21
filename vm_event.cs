@@ -20,8 +20,10 @@ namespace Rextester
         
         public event Action<ViewNode> Destroy;
         
-        public ViewNode(string inStr){
+        public ViewNode(string inStr, ModelNode mn){
             str = inStr;
+            mn.Destroy += DestroyObject;
+            mn.Found += FlashObject;
         }
         
         public string GetValue(){
@@ -41,11 +43,11 @@ namespace Rextester
     public class ModelNode{
         private int num;
         
-        public event Action Search;
+        public event Action Found;
         
         public event Action Destroy;
         
-        public ModelNode(int inNum, int index){
+        public ModelNode(int inNum){
             num = inNum;
         }
         
@@ -53,8 +55,8 @@ namespace Rextester
             Destroy.Invoke();
         }
         
-        public void FlashObject(){
-            Search.Invoke();
+        public void FoundObject(){
+            Found.Invoke();
         }
         
         public int GetValue(){
@@ -71,19 +73,19 @@ namespace Rextester
             model = new Model();
         }
         
-        public void Add(string s){
+        public View Add(string s){
             int n;
             bool l = Int32.TryParse(s, out n);
             
-            if(!l) return;
+            if(!l) return null;
             
-            ViewNode vn = new ViewNode(s);
+            ModelNode mn = model.Add(n);
+            
+            ViewNode vn = new ViewNode(s, mn);
             vn.Destroy += DestroyObject;
             list.Add(vn);
             
-            ModelNode mn = model.Add(n, list.Count-1);
-            mn.Destroy += vn.DestroyObject;
-            mn.Search += vn.FlashObject;
+            return this;
         }
         
         public void Remove(string s){
@@ -119,8 +121,8 @@ namespace Rextester
             list = new List<ModelNode>();
         }
         
-        public ModelNode Add(int n, int index){
-            ModelNode mn = new ModelNode(n, index);
+        public ModelNode Add(int n){
+            ModelNode mn = new ModelNode(n);
             list.Add(mn);
             return mn;
         }
@@ -146,7 +148,7 @@ namespace Rextester
         
             foreach(ModelNode mn in list){
                 if(mn.GetValue() == n){
-                    mn.FlashObject();
+                    mn.FoundObject();
                     break;
                 }
             }
