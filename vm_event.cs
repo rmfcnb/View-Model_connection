@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Rextester
+namespace Demo
 {
     public class Program
     {
