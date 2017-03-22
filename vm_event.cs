@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Demo
+namespace Rextester
 {
     public class Program
     {
@@ -35,12 +35,11 @@ namespace Demo
         }
         
         public void DestroyObject(){
-            var d = Destroyed;
-            d(this);
+            Destroyed(this);
         }
     } 
     // ######################
-    public class ModelNode{
+    public class ModelNode : IDisposable{
         private int num;
         
         public event Action Found;
@@ -51,7 +50,7 @@ namespace Demo
             num = inNum;
         }
         
-        public void DestroyObject(){
+        public void Dispose(){
             Destroyed.Invoke();
         }
         
@@ -128,10 +127,10 @@ namespace Demo
         }
         
         public void Remove(int n){
-            int i = GetIndex(n);
-            if(i != -1){
-                list[i].DestroyObject();
-                list.RemoveAt(i);
+            ModelNode mn = list.Find(x => x.GetValue() == n);
+            if(mn != null){
+                list.Remove(mn);
+                mn.Dispose();
             }
         }
         
